@@ -1,3 +1,9 @@
+/**
+ * Add some useful links for assessment of Wikipedia articles
+ * @author: [[User:Helder.wiki]]
+ * @traking: [[Special:GlobalUsage/User:Helder.wiki/Tools/AssessmentHelper.js]] ([[File:User:Helder.wiki/Tools/AssessmentHelper.js]])
+ */
+
 (function() {
 
 /* Assessment Helper */
