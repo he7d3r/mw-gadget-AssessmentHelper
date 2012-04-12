@@ -56,7 +56,7 @@ function updateQuality( page, quality ){
 				return '{' + '{marca de projeto|' + quality + projectInfo + '|{' + '{subst:rev}}}}';
 			});
 		}
-		console.debug( text, newWikiText );
+		mw.log( text, newWikiText );
 		editPage( page, newWikiText, mw.msg( 'ah-quality-update-summary', quality ) );
 	};
 
@@ -300,7 +300,7 @@ function estimateQuality( text ){
 			}
 		});
 	});
-console.debug( 'meetReq=', meetReq );
+mw.log( 'meetReq=', meetReq );
 	for (var q = maxQuality; q>0; q--){
 		if ( quality > 0 ){
 			// At this point, quality > q
