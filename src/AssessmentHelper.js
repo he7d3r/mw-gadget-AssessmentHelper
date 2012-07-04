@@ -1,3 +1,4 @@
+
 /**
  * Add some useful links for assessment of Wikipedia articles
  * @author: [[User:Helder.wiki]]
@@ -6,8 +7,8 @@
 /*jslint browser: true, white: true, devel: true, regexp: true, plusplus: true */
 /*global jQuery, mediaWiki, mw, $, jsMsg, google */
 
-(function() {
-'use strict';
+// (function() {
+// 'use strict';
 
 /* Assessment Helper */
 mw.messages.set( {
@@ -809,7 +810,7 @@ $(function(){
 	});
 });
 
-}());
+// }());
 
 
 
