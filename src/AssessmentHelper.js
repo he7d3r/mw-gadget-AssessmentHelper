@@ -3,8 +3,11 @@
  * @author: [[User:Helder.wiki]]
  * @tracking: [[Special:GlobalUsage/User:Helder.wiki/Tools/AssessmentHelper.js]] ([[File:User:Helder.wiki/Tools/AssessmentHelper.js]])
  */
+/*jslint browser: true, white: true, devel: true, regexp: true, plusplus: true */
+/*global jQuery, mediaWiki, mw, $, jsMsg, google */
 
 (function() {
+'use strict';
 
 /* Assessment Helper */
 mw.messages.set( {
@@ -43,6 +46,32 @@ mw.messages.set( {
 		'<li>$11 $12 imagens</li>' +
 		'</ul>'
 });
+function editPage( page, text, summary ){
+	// Edit page (must be done through POST)
+	$.ajax({
+		url: mw.util.wikiScript( 'api' ),
+		type: 'POST',
+		dataType: 'json',
+		data: {
+			format: 'json',
+			action: 'edit',
+			title: page,
+			text: text,
+			summary: summary,
+			token: mw.user.tokens.get( 'editToken' )
+		}
+	} )
+	.done( function( data ) {
+		if ( data && data.edit && data.edit.result && data.edit.result === 'Success' ) {
+			jsMsg( mw.msg( 'ah-successful-update' ) );
+		} else {
+			alert( 'Houve um erro ao requisitar a edição da página.' );
+		}
+	} )
+	.fail( function() {
+		alert( 'Houve um erro ao usar AJAX para editar a página.' );
+	});
+}
 
 function updateQuality( page, quality ){
 	var processWikiText = function ( text ){
@@ -70,49 +99,23 @@ function updateQuality( page, quality ){
 			'prop': 'revisions',
 			'rvprop': 'content',
 			'indexpageids': '1'
-		},
-		success: function( data ) {
-			if ( 'error' in data ) {
-				alert( 'Erro da API: ' + data.error.code + '. ' + data.error.info );
-			} else if ( data.query && data.query.pages && data.query.pageids ) {
-				if( data.query.pages[ data.query.pageids[0] ].missing === '' ) {
-					processWikiText( '' );
-				} else {
-					processWikiText( data.query.pages[ data.query.pageids[0] ].revisions[0]['*'] );
-				}
-			} else {
-				alert( 'Houve um erro inesperado ao usar a API do MediaWiki.' );
-			}
-		},
-		error: function() {
-			alert( 'Houve um erro ao usar AJAX para consultar o conteúdo da página.' );
 		}
-	});
-}
-function editPage( page, text, summary ){
-	// Edit page (must be done through POST)
-	$.ajax({
-		url: mw.util.wikiScript( 'api' ),
-		type: 'POST',
-		dataType: 'json',
-		data: {
-			format: 'json',
-			action: 'edit',
-			title: page,
-			text: text,
-			summary: summary,
-			token: mw.user.tokens.get( 'editToken' )
-		},
-		success: function( data ) {
-			if ( data && data.edit && data.edit.result && data.edit.result === 'Success' ) {
-				jsMsg( mw.msg( 'ah-successful-update' ) );
+	} )
+	.done( function( data ) {
+		if ( typeof data.error !== 'undefined' ) {
+			alert( 'Erro da API: ' + data.error.code + '. ' + data.error.info );
+		} else if ( data.query && data.query.pages && data.query.pageids ) {
+			if( data.query.pages[ data.query.pageids[0] ].missing === '' ) {
+				processWikiText( '' );
 			} else {
-				alert( 'Houve um erro ao requisitar a edição da página.' );
+				processWikiText( data.query.pages[ data.query.pageids[0] ].revisions[0]['*'] );
 			}
-		},
-		error: function() {
-			alert( 'Houve um erro ao usar AJAX para editar a página.' );
+		} else {
+			alert( 'Houve um erro inesperado ao usar a API do MediaWiki.' );
 		}
+	} )
+	.fail( function() {
+		alert( 'Houve um erro ao usar AJAX para consultar o conteúdo da página.' );
 	});
 }
 
@@ -137,17 +140,24 @@ function estimateQuality( text ){
 			'references': text.split( /<ref[^\n\/]*?>[\s\S]*?<\/ref>|<ref\s*[\s\S]+?\/>|\{\{(?:[Cc]it(?:ar?|e)|[Rr]ef)/ ).length - 1,
 			'images': text.split( /\[\[(?:Imagem?|File|Ficheiro|Arquivo)/ ).length - 1
 		},
-		reportText;
-	var hasRefs = function ( text ){
+		reportText, hasRefs, exceedMaxParagraphLength, hasSomeTemplateFromList,
+		hasEveryTemplateFromList, requirements, i, q, progressBar,
+		ns = mw.config.get( 'wgNamespaceNumber' ),
+		talkPage = mw.config.get( 'wgFormattedNamespaces' )[ ns - ns%2 + 1 ] +
+			':' + mw.config.get( 'wgTitle' ),
+		reportInfo = {},
+		css = '';
+	hasRefs = function ( text ){
 		// FIXME: This should detect all reference templates
 		// See [[:Categoria:!Predefinições para referências]]
 		return (/<ref|\{\{(?:[Cc]it(?:ar?|e)|[Rr]ef)/).test( text );
 	};
-	var exceedMaxParagraphLength = function ( text, max ){
+	exceedMaxParagraphLength = function ( text, max ){
+		var i=0;
 		if( !mParagraphs ){
 			return false;
 		}
-		for ( var i=0; i< mParagraphs.length; i++){
+		for ( i=0; i< mParagraphs.length; i++){
 			if ( mParagraphs[i].length > max ) {
 				return true;
 			}
@@ -155,7 +165,7 @@ function estimateQuality( text ){
 		// Bad wikification
 		return false;
 	};
-	var hasSomeTemplateFromList = function ( text, list ){
+	hasSomeTemplateFromList = function ( text, list ){
 		$.each( list, function( i, templateName ){
 			var first = $.escapeRE( templateName.charAt(0) ),
 				uFirst = first.toUpperCase(),
@@ -168,8 +178,9 @@ function estimateQuality( text ){
 		var reTemplates = new RegExp( '\\{\\{' + list.join( '|' ) );
 		return reTemplates.test( text );
 	};
-	var hasEveryTemplateFromList = function ( text, list ){
-		for ( var i = list.length - 1; i >= 0; i--){
+	hasEveryTemplateFromList = function ( text, list ){
+		var i;
+		for ( i = list.length - 1; i >= 0; i--){
 			if ( text.indexOf( '{' + '{' + list[i] ) === -1 ) {
 				return false;
 			}
@@ -181,7 +192,7 @@ function estimateQuality( text ){
 	* [[Wikipédia:Avaliação automática]]
 	* [[User:Danilo.bot/marcas.py]]
 	*/
-	var requirements = {
+	requirements = {
 		'size': {
 			'2': function( text ){
 				return hasRefs( text )? 2000 : 8000;
@@ -251,7 +262,7 @@ function estimateQuality( text ){
 			]
 		}
 	};
-	for(var i=1; i<=maxQuality; i++){
+	for(i=1; i<=maxQuality; i++){
 		possiblyLevels[i] = true;
 	}
 	$.each( requirements, function( req, qList ){
@@ -301,7 +312,7 @@ function estimateQuality( text ){
 		});
 	});
 mw.log( 'meetReq=', meetReq );
-	for (var q = maxQuality; q>0; q--){
+	for (q = maxQuality; q>0; q--){
 		if ( quality > 0 ){
 			// At this point, quality > q
 			if ( !possiblyLevels[q] ) {
@@ -346,13 +357,11 @@ mw.log( 'meetReq=', meetReq );
 			);
 		}
 	}
-	var reportInfo = {};
-	var css = '';
 	$.each(
 		[ 'size', 'links', 'sections', 'paragraphs', 'references', 'images' ],
 		function( i, data ){
 			var	max = 1.4 * ( requirements[ data ][ maxQuality ] || 0 ),
-				p;
+				p, diff, pi;
 			if( max < pageInfo[ data ] ){
 				max = pageInfo[ data ];
 			}
@@ -362,8 +371,8 @@ mw.log( 'meetReq=', meetReq );
 			}
 			// Generate CSS for progress bar
 			for( i=1; i < maxQuality; i++ ){
-				var	diff = ( requirements[ data ][ i+1 ] || 0) - ( requirements[ data ][ i ] || 0),
-					pi = 100 * ( diff / max).toFixed(2);
+				diff = ( requirements[ data ][ i+1 ] || 0) - ( requirements[ data ][ i ] || 0);
+				pi = 100 * ( diff / max).toFixed(2);
 				css += '#ah-' + data + ' .ah-q' + i + '{ width: ' + pi + '%; } ';
 			}
 			p = 100 * (( pageInfo[ data ] || 0 )/ max).toFixed(2);
@@ -371,7 +380,7 @@ mw.log( 'meetReq=', meetReq );
 		}
 	);
 	mw.util.addCSS( css );
-	var progressBar =
+	progressBar =
 		'<span class="ah-percent">&nbsp;</span>' +
 		'<span class="ah-q1"></span>' +
 		'<span class="ah-q2"></span>' +
@@ -386,9 +395,6 @@ mw.log( 'meetReq=', meetReq );
 		'<div id="ah-references">' + progressBar, reportInfo.references,
 		'<div id="ah-images">' + progressBar, reportInfo.images
 	);
-	var	ns = mw.config.get( 'wgNamespaceNumber' ),
-		talkPage = mw.config.get( 'wgFormattedNamespaces' )[ ns - ns%2 + 1 ] +
-			':' + mw.config.get( 'wgTitle' );
 	reportText += mw.html.element(
 		'a', {
 			id: 'ah-update-link',
@@ -419,43 +425,43 @@ function runPriorityChecker(){
 			'cllimit': 20,
 			'titles': enTalkPage,
 			'indexpageids': '1'
-		},
-		success: function( data ){
-			var	cats,
-				found = false,
-				legend = {
-					Top: 4,
-					High: 3,
-					Mid: 2,
-					Low: 1
-				};
-			try {
-				cats = data.query.pages[ data.query.pageids[0] ].categories;
-			} catch (err) {
-				jsMsg('Não foi possível possível determinar a prioridade do artigo na Wikipédia inglesa.', err);
+		}
+	})
+	.done( function( data ){
+		var	cats,
+			found = false,
+			legend = {
+				Top: 4,
+				High: 3,
+				Mid: 2,
+				Low: 1
+			};
+		try {
+			cats = data.query.pages[ data.query.pageids[0] ].categories;
+		} catch (err) {
+			jsMsg('Não foi possível possível determinar a prioridade do artigo na Wikipédia inglesa.', err);
+			return false;
+		}
+		if ( !cats ) {
+			jsMsg('Ainda não foi informada a prioridade da versão inglesa deste artigo.');
+			return false;
+		}
+		$.each(cats, function(id, value){
+			var priority = value.title.match( /Category:(Top|High|Mid|Low)-Priority/ );
+			if ( priority && priority[1] ) {
+				found = true;
+				jsMsg(
+					'Este artigo corresponde a um de prioridade "' +
+					priority[1] +
+					'" na Wikipédia inglesa. Considere indicar na discussão que ele é de importância ' +
+					legend[ priority[1] ] + '.'
+				);
 				return false;
 			}
-			if ( !cats ) {
-				jsMsg('Ainda não foi informada a prioridade da versão inglesa deste artigo.');
-				return false;
-			}
-			$.each(cats, function(id, value){
-				var priority = value.title.match( /Category:(Top|High|Mid|Low)-Priority/ );
-				if ( priority && priority[1] ) {
-					found = true;
-					jsMsg(
-						'Este artigo corresponde a um de prioridade "' +
-						priority[1] +
-						'" na Wikipédia inglesa. Considere indicar na discussão que ele é de importância ' +
-						legend[ priority[1] ] + '.'
-					);
-					return false;
-				}
-			});
-			if ( !found ) {
-				jsMsg('Não foi possível possível determinar a prioridade do artigo na Wikipédia inglesa.');
-				return false;
-			}
+		});
+		if ( !found ) {
+			jsMsg('Não foi possível possível determinar a prioridade do artigo na Wikipédia inglesa.');
+			return false;
 		}
 	});
 }
@@ -482,13 +488,14 @@ var	wikiproject,
 		]
 	},
 	types = [ 'quality', 'importance' ],
-	pages, matrix, curC, curType, nRequests, done;
+	pages, matrix, curC, curType, nRequests, done, pageList = [],
+	category;
 function getTableWikiCode( t ){
 	var	table = [],
-		line;
-	for( var j = 0; j < t[0].length; j++ ){
+		line, i, j;
+	for( j = 0; j < t[0].length; j++ ){
 		line = [];
-		for( var i = 0; i < t.length; i++ ){
+		for( i = 0; i < t.length; i++ ){
 			line.push( t[i][j] );
 		}
 		table.push( line.join( ' | ' ) );
@@ -505,9 +512,9 @@ function getTableWikiCode( t ){
 	].join( '\n' );
 }
 function countIntersection( list1, list2 ){
-	var total = 0;
-	for( var i = 0; i < list1.length; i++ ){
-		for( var j = 0; j < list2.length; j++ ){
+	var total = 0, i, j;
+	for( i = 0; i < list1.length; i++ ){
+		for( j = 0; j < list2.length; j++ ){
 			if( list1[i].pageid === list2[j].pageid ){
 				total++;
 				break;
@@ -540,67 +547,61 @@ function processCurrentCat( from ){
 	$.ajax({
 		url: mw.util.wikiScript( 'api' ),
 		dataType: 'json',
-		data: data,
-		success: function( data ) {
-			if ( !data ) {
-				alert( 'Erro: A API não retornou dados.' );
-			} else if ( 'error' in data ) {
-				alert( 'Erro da API: ' + data.error.code + '. ' + data.error.info );
-			} else if ( data.query && data.query.categorymembers ) {
-				// Add to list
-				$.merge( pages[ types[ curType ] ][ curC ], data.query.categorymembers );
-				if( data[ 'query-continue' ] ){
-					processCurrentCat(
-						data[ 'query-continue' ].categorymembers &&
-						data[ 'query-continue' ].categorymembers.cmcontinue
-					);
+		data: data
+	})
+	.done( function( data ) {
+		if ( !data ) {
+			alert( 'Erro: A API não retornou dados.' );
+		} else if ( typeof data.error !== 'undefined' ) {
+			alert( 'Erro da API: ' + data.error.code + '. ' + data.error.info );
+		} else if ( data.query && data.query.categorymembers ) {
+			// Add to list
+			$.merge( pages[ types[ curType ] ][ curC ], data.query.categorymembers );
+			if( data[ 'query-continue' ] ){
+				processCurrentCat(
+					data[ 'query-continue' ].categorymembers &&
+					data[ 'query-continue' ].categorymembers.cmcontinue
+				);
+			} else {
+				done++;
+				jsMsg( 'Concluída a análise de ' + done + ' das ' + nRequests + ' categorias (' + (100 * done / nRequests).toFixed(1) + '%)' );
+				curC++;
+				if( curC < cats[ types[ curType ] ].length ){
+					processCurrentCat();
 				} else {
-					done++;
-					jsMsg( 'Concluída a análise de ' + done + ' das ' + nRequests + ' categorias (' + (100 * done / nRequests).toFixed(1) + '%)' );
-					curC++;
-					if( curC < cats[ types[ curType ] ].length ){
+					curType++;
+					if( curType < types.length ){
+						curC = 0;
 						processCurrentCat();
 					} else {
-						curType++;
-						if( curType < types.length ){
-							curC = 0;
-							processCurrentCat();
-						} else {
-							// Now, intersect cats to get the numbers
-							intersectCats( 'quality', 'importance' );
-							// and print the wikicode
-							jsMsg( 'Código wiki:<br><pre>' + mw.html.escape( getTableWikiCode( matrix ) ) + '</pre>' );
-						}
+						// Now, intersect cats to get the numbers
+						intersectCats( 'quality', 'importance' );
+						// and print the wikicode
+						jsMsg( 'Código wiki:<br><pre>' + mw.html.escape( getTableWikiCode( matrix ) ) + '</pre>' );
 					}
 				}
-			} else {
-				alert( 'Houve um erro ao consultar os membros da categoria.' );
 			}
-		},
-		error: function() {
-			alert( 'Houve um erro ao usar AJAX para consultar os membros da categoria.' );
+		} else {
+			alert( 'Houve um erro ao consultar os membros da categoria.' );
 		}
+	})
+	.fail( function() {
+		alert( 'Houve um erro ao usar AJAX para consultar os membros da categoria.' );
 	});
 }
 
 
 if ( 0 === mw.config.get( 'wgNamespaceNumber' ) &&  mw.config.get( 'wgAction' ) === 'view' ) {
 	$(function(){
-		var getText = function ( query ){
+		var getText, runQualityChecker, pQuality, pPriority;
+		getText = function ( query ){
 			var	pages = query.query.pages,
 				pageids = query.query.pageids,
 				i, text;
-
-			for (i = 0; i < pageids.length; i++) {
-				if (!pages[ pageids[i] ].pageid) {
-					continue;
-				}
-				text = pages[ pageids[i] ].revisions[0]['*'];
-				break;
-			}
+			text = pages[ pageids[0] ].revisions[0]['*'];
 			estimateQuality( text );
 		};
-		var runQualityChecker = function ( page ) {
+		runQualityChecker = function ( page ) {
 			$.getJSON(
 				mw.util.wikiScript( 'api' ), {
 					'format': 'json',
@@ -615,20 +616,20 @@ if ( 0 === mw.config.get( 'wgNamespaceNumber' ) &&  mw.config.get( 'wgAction' ) 
 		if ( mw.config.get( 'qcAutoCheck' ) ){
 			runQualityChecker( mw.config.get( 'wgPageName' ) );
 		}
-		var	pQuality = mw.util.addPortletLink(
-				'p-cactions',
-				'#',
-				mw.msg( 'ah-check-quality-link' ),
-				'ca-ah-quality',
-				mw.msg( 'ah-check-quality-desc' )
-			),
-			pPriority = mw.util.addPortletLink(
-				'p-cactions',
-				'#',
-				mw.msg( 'ah-check-priority-link' ),
-				'ca-ah-priority',
-				mw.msg( 'ah-check-priority-desc' )
-			);
+		pQuality = mw.util.addPortletLink(
+			'p-cactions',
+			'#',
+			mw.msg( 'ah-check-quality-link' ),
+			'ca-ah-quality',
+			mw.msg( 'ah-check-quality-desc' )
+		);
+		pPriority = mw.util.addPortletLink(
+			'p-cactions',
+			'#',
+			mw.msg( 'ah-check-priority-link' ),
+			'ca-ah-priority',
+			mw.msg( 'ah-check-priority-desc' )
+		);
 		// Bind click handler
 		$(pQuality).click( function( e ) {
 			e.preventDefault();
@@ -675,11 +676,9 @@ $(function(){
 
 
 /* Script que gera uma tabela de afluentes para uma determinada categoria */
-var    pageList = [],
-	category;
 function getWikitableForData( data, title, format ){
 	var	text = '{| class="wikitable sortable"\n',
-		cols = data[0].length, i, j;
+		cols = data[0].length, i, j, line;
 	if ( title ){
 		text += '|+ ' + title + '\n';
 	}
@@ -702,10 +701,10 @@ function getWikitableForData( data, title, format ){
 	return text;
 }
 function generateBackLinksTable(){
-	total = pageList.length;
-	done = 0;
-	mean = 0;
-	table = [ [ 'Páginas', 'Afluentes' ] ];
+	var	total = pageList.length,
+		done = 0,
+		mean = 0,
+		table = [ [ 'Páginas', 'Afluentes' ] ];
 	$.each( pageList, function(pos, page){
 		$.getJSON(
 			mw.util.wikiScript( 'api' ), {
@@ -719,6 +718,7 @@ function generateBackLinksTable(){
 				'bllimit': 500,
 				'indexpageids': true
 			}, function( data ){
+				var text;
 				table.push( [ page, data.query.backlinks.length ] );
 				done++;
 				mean = mean + ( data.query.backlinks.length - mean)/done;
@@ -756,34 +756,34 @@ function processCategory( cat, from ){
 	$.ajax({
 		url: mw.util.wikiScript( 'api' ),
 		dataType: 'json',
-		data: data,
-		success: function( data ) {
-			var cont;
-			var list = [];
-			if ( !data ) {
-				alert( 'Erro: a API não retornou dados.' );
-			} else if ( 'error' in data ) {
-				alert( 'Erro da API: ' + data.error.code + '. ' + data.error.info );
-			} else if ( data.query && data.query.pageids && data.query.pages) {
-				$.each( data.query.pageids, function(pos, id){
-					pageList.push( data.query.pages[id].title.replace( /^(?:Anexo )?Discussão:/g, '' ) );
-				});
-				cont = data[ 'query-continue' ] &&
-					data[ 'query-continue' ].categorymembers &&
-					data[ 'query-continue' ].categorymembers.gcmcontinue;
-				if( cont ){
-					processCategory( cat, cont );
-				} else {
-					jsMsg( 'Concluída a consulta à ' + cat + '.' );
-					generateBackLinksTable();
-				}
+		data: data
+	})
+	.done( function( data ) {
+		var	cont,
+			list = [];
+		if ( !data ) {
+			alert( 'Erro: a API não retornou dados.' );
+		} else if ( typeof data.error !== 'undefined' ) {
+			alert( 'Erro da API: ' + data.error.code + '. ' + data.error.info );
+		} else if ( data.query && data.query.pageids && data.query.pages) {
+			$.each( data.query.pageids, function(pos, id){
+				pageList.push( data.query.pages[id].title.replace( /^(?:Anexo )?Discussão:/g, '' ) );
+			});
+			cont = data[ 'query-continue' ] &&
+				data[ 'query-continue' ].categorymembers &&
+				data[ 'query-continue' ].categorymembers.gcmcontinue;
+			if( cont ){
+				processCategory( cat, cont );
 			} else {
-				alert( 'Houve um erro inesperado ao consultar os membros da categoria.' );
+				jsMsg( 'Concluída a consulta à ' + cat + '.' );
+				generateBackLinksTable();
 			}
-		},
-		error: function() {
-			alert( 'Houve um erro ao usar AJAX para consultar os membros da categoria.' );
+		} else {
+			alert( 'Houve um erro inesperado ao consultar os membros da categoria.' );
 		}
+	})
+	.fail( function() {
+		alert( 'Houve um erro ao usar AJAX para consultar os membros da categoria.' );
 	});
 }
 
@@ -795,6 +795,7 @@ $(function(){
 		'ca-ah-backlinks',
 		'Produz uma tabela com o número de afluentes por artigo da categoria especificada'
 	)).click( function( e ) {
+		var category;
 		e.preventDefault();
 		category = prompt(
 			'Informe o nome de uma categoria (usada nos artigos ou nas páginas de discussão):',
@@ -809,7 +810,7 @@ $(function(){
 	});
 });
 
-})();
+}());
 
 
 
@@ -817,12 +818,13 @@ $(function(){
 /* Script para plotar gráficos relacionando o número de afluentes e o tamanho dos artigos de certa categoria */
 // FIXME: Fundir as funções que consultam a API com as usadas mais acima...
 
-(function() {
-
+(function(google) {
+'use strict';
 function plotTableUsingGoogleAPI( table, cat ){
+
 	var drawChart = function () {
 		var	data = new google.visualization.DataTable(),
-			list = [], links, size;
+			list = [], links, size, options, chart;
 
 		data.addColumn('number', 'Afluentes');
 		data.addColumn('number', 'Detalhes:');
@@ -842,7 +844,7 @@ function plotTableUsingGoogleAPI( table, cat ){
 		});
 		data.addRows( list );
 		// http://code.google.com/apis/chart/interactive/docs/gallery/scatterchart.html#Configuration_Options
-		var options = {
+		options = {
 			//width: 800,
 			height: 300,
 			pointSize: 1,
@@ -852,11 +854,12 @@ function plotTableUsingGoogleAPI( table, cat ){
 			legend: 'none'
 		};
 
-		var chart = new google.visualization.ScatterChart(document.getElementById('mw-js-message'));
+		chart = new google.visualization.ScatterChart(document.getElementById('mw-js-message'));
 		chart.draw(data, options);
 	};
 
-	$.getScript('https://www.google.com/jsapi', function(data, textStatus){
+	$.getScript('https://www.google.com/jsapi')
+	.done( function(data, textStatus){
 		if('success' !== textStatus){
 			alert('Não foi possível carregar a API do Google'); return;
 		}
@@ -870,13 +873,12 @@ function getLength( obj ){
 	var total;
 	if ( $.isArray( obj ) ){
 		return obj.length;
-	} else {
-		total = 0;
-		$.each( obj, function(pos, page){
-			total++;
-		});
-		return total;
 	}
+	total = 0;
+	$.each( obj, function(pos, page){
+		total++;
+	});
+	return total;
 }
 
 function addArticleSizeToTable( list, callback ){
@@ -885,8 +887,8 @@ function addArticleSizeToTable( list, callback ){
 		table = isList? {} : list,
 		done = 0,
 		num = 0,
-		titles;
-	var processSomePages = function( data ){
+		titles, processSomePages;
+	processSomePages = function( data ){
 		$.each( data.query.pages, function( pos, page ){
 			if( typeof table[ page.title ] === 'undefined' || isList ) {
 				table[ page.title ] = {};
@@ -946,39 +948,39 @@ function getTotalOfBackLinks( title, callback, limit, from, links ){
 	$.ajax({
 		url: mw.util.wikiScript( 'api' ),
 		dataType: 'json',
-		data: data,
-		success: function( data ) {
-			var cont;
-			if ( !data ) {
-				alert( 'Erro: a API não retornou dados.' );
-			} else if ( 'error' in data ) {
-				alert( 'Erro da API: ' + data.error.code + '. ' + data.error.info );
-			} else if ( data.query && data.query.backlinks ) {
-				cont = data[ 'query-continue' ] &&
-					data[ 'query-continue' ].backlinks &&
-					data[ 'query-continue' ].backlinks.blcontinue;
-				links += data.query.backlinks.length;
-				if( cont && links < limit ){
-					getTotalOfBackLinks( title, callback, limit, cont, links );
-				} else {
-					jsMsg( 'Concluída a contagem de afluentes de ' + title + '.' );
-					if( $.isFunction( callback ) ){
-						callback( links );
-					}
-				}
+		data: data
+	})
+	.done(function( data ) {
+		var cont;
+		if ( !data ) {
+			alert( 'Erro: a API não retornou dados.' );
+		} else if ( typeof data.error !== 'undefined' ) {
+			alert( 'Erro da API: ' + data.error.code + '. ' + data.error.info );
+		} else if ( data.query && data.query.backlinks ) {
+			cont = data[ 'query-continue' ] &&
+				data[ 'query-continue' ].backlinks &&
+				data[ 'query-continue' ].backlinks.blcontinue;
+			links += data.query.backlinks.length;
+			if( cont && links < limit ){
+				getTotalOfBackLinks( title, callback, limit, cont, links );
 			} else {
-				alert( 'Houve um erro inesperado ao consultar os afluentes da página ' + title + '.' );
+				jsMsg( 'Concluída a contagem de afluentes de ' + title + '.' );
+				if( $.isFunction( callback ) ){
+					callback( links );
+				}
 			}
-		},
-		error: function() {
-			alert( 'Houve um erro ao usar AJAX para consultar os afluentes da página ' + title + '.' );
+		} else {
+			alert( 'Houve um erro inesperado ao consultar os afluentes da página ' + title + '.' );
 		}
+	})
+	.fail( function() {
+		alert( 'Houve um erro ao usar AJAX para consultar os afluentes da página ' + title + '.' );
 	});
 
 	
 }
 
-function addNumberOfBackLinksToTable( list, callback, from ){
+function addNumberOfBackLinksToTable( list, callback /*, from*/ ){
 	var	isList = $.isArray( list ),
 		total = getLength( list ),
 		table = isList? {} : list,
@@ -1021,37 +1023,37 @@ function getPagesFromCat( cat, callback, from, list ){
 	$.ajax({
 		url: mw.util.wikiScript( 'api' ),
 		dataType: 'json',
-		data: data,
-		success: function( data ) {
-			var cont;
-			if ( !data ) {
-				alert( 'Erro: a API não retornou dados.' );
-			} else if ( 'error' in data ) {
-				alert( 'Erro da API: ' + data.error.code + '. ' + data.error.info );
-			} else if ( data.query && data.query.pageids && data.query.pages) {
-				$.each( data.query.pageids, function(pos, id){
-					list.push( data.query.pages[id].title.replace( /^(?:Anexo )?Discussão:/g, '' ) );
-				});
-				cont = data[ 'query-continue' ] &&
-					data[ 'query-continue' ].categorymembers &&
-					data[ 'query-continue' ].categorymembers.gcmcontinue;
-				if( cont ){
-					getPagesFromCat( cat, callback, cont, list );
-				} else {
-					jsMsg( 'Concluída a consulta à ' + cat + '.' );
-					if( $.isFunction( callback ) ){
-						callback( list );
-					}
-				}
-			} else if ( data.length === 0 ){
-				alert( 'A ' + cat + ' está vazia.' );
+		data: data
+	})
+	.done( function( data ) {
+		var cont;
+		if ( !data ) {
+			alert( 'Erro: a API não retornou dados.' );
+		} else if ( typeof data.error !== 'undefined' ) {
+			alert( 'Erro da API: ' + data.error.code + '. ' + data.error.info );
+		} else if ( data.query && data.query.pageids && data.query.pages) {
+			$.each( data.query.pageids, function(pos, id){
+				list.push( data.query.pages[id].title.replace( /^(?:Anexo )?Discussão:/g, '' ) );
+			});
+			cont = data[ 'query-continue' ] &&
+				data[ 'query-continue' ].categorymembers &&
+				data[ 'query-continue' ].categorymembers.gcmcontinue;
+			if( cont ){
+				getPagesFromCat( cat, callback, cont, list );
 			} else {
-				alert( 'Houve um erro inesperado ao consultar a categoria.' );
+				jsMsg( 'Concluída a consulta à ' + cat + '.' );
+				if( $.isFunction( callback ) ){
+					callback( list );
+				}
 			}
-		},
-		error: function() {
-			alert( 'Houve um erro ao usar AJAX para consultar os membros da categoria.' );
+		} else if ( data.length === 0 ){
+			alert( 'A ' + cat + ' está vazia.' );
+		} else {
+			alert( 'Houve um erro inesperado ao consultar a categoria.' );
 		}
+	})
+	.fail( function() {
+		alert( 'Houve um erro ao usar AJAX para consultar os membros da categoria.' );
 	});
 }
 
@@ -1063,7 +1065,7 @@ $(function(){
 		'ca-ah-size-vs-links',
 		'Produz um gráfico que relaciona o número de afluentes e o tamanho dos artigos de um categoria'
 	)).click( function( e ) {
-		var reCat = /^Categor(ia|y):/; //FIXME: Use wgNamespaceIds for other wikis
+		var category, reCat = /^Categor(ia|y):/; //FIXME: Use wgNamespaceIds for other wikis
 		e.preventDefault();
 		category = prompt(
 			'Informe o nome de uma categoria (usada nos artigos ou nas páginas de discussão):',
@@ -1089,4 +1091,4 @@ $(function(){
 	});
 });
 
-})();
+}(google));
