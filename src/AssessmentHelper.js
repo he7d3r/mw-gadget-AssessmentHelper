@@ -795,7 +795,6 @@ $(function(){
 		'ca-ah-backlinks',
 		'Produz uma tabela com o número de afluentes por artigo da categoria especificada'
 	)).click( function( e ) {
-		var category;
 		e.preventDefault();
 		category = prompt(
 			'Informe o nome de uma categoria (usada nos artigos ou nas páginas de discussão):',
@@ -1065,7 +1064,7 @@ $(function(){
 		'ca-ah-size-vs-links',
 		'Produz um gráfico que relaciona o número de afluentes e o tamanho dos artigos de um categoria'
 	)).click( function( e ) {
-		var category, reCat = /^Categor(ia|y):/; //FIXME: Use wgNamespaceIds for other wikis
+		var reCat = /^Categor(ia|y):/; //FIXME: Use wgNamespaceIds for other wikis
 		e.preventDefault();
 		category = prompt(
 			'Informe o nome de uma categoria (usada nos artigos ou nas páginas de discussão):',
