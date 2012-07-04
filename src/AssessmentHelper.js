@@ -818,7 +818,7 @@ $(function(){
 /* Script para plotar gráficos relacionando o número de afluentes e o tamanho dos artigos de certa categoria */
 // FIXME: Fundir as funções que consultam a API com as usadas mais acima...
 
-(function(google) {
+(function() {
 'use strict';
 function plotTableUsingGoogleAPI( table, cat ){
 
@@ -1091,4 +1091,4 @@ $(function(){
 	});
 });
 
-}(google));
+}());
