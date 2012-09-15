@@ -1,11 +1,10 @@
-
 /**
  * Add some useful links for assessment of Wikipedia articles
  * @author: [[User:Helder.wiki]]
  * @tracking: [[Special:GlobalUsage/User:Helder.wiki/Tools/AssessmentHelper.js]] ([[File:User:Helder.wiki/Tools/AssessmentHelper.js]])
  */
-/*jslint browser: true, white: true, devel: true, regexp: true, plusplus: true */
-/*global jQuery, mediaWiki, mw, $, jsMsg, google */
+/*jslint browser: true, white: true, devel: true, regexp: true, plusplus: true, sloppy: true */
+/*global jQuery, mediaWiki, mw, $, google */
 
 // (function() {
 // 'use strict';
@@ -64,7 +63,7 @@ function editPage( page, text, summary ){
 	} )
 	.done( function( data ) {
 		if ( data && data.edit && data.edit.result && data.edit.result === 'Success' ) {
-			jsMsg( mw.msg( 'ah-successful-update' ) );
+			mw.notify( mw.msg( 'ah-successful-update' ) );
 		} else {
 			alert( 'Houve um erro ao requisitar a edição da página.' );
 		}
@@ -103,7 +102,7 @@ function updateQuality( page, quality ){
 		}
 	} )
 	.done( function( data ) {
-		if ( typeof data.error !== 'undefined' ) {
+		if ( data.error !== undefined ) {
 			alert( 'Erro da API: ' + data.error.code + '. ' + data.error.info );
 		} else if ( data.query && data.query.pages && data.query.pageids ) {
 			if( data.query.pages[ data.query.pageids[0] ].missing === '' ) {
@@ -407,7 +406,7 @@ mw.log( 'meetReq=', meetReq );
 		e.preventDefault();
 		updateQuality( talkPage, quality );
 	});
-	jsMsg( reportText );
+	$('#mw-content-text').prepend( reportText );
 	return quality;
 }
 
@@ -440,18 +439,18 @@ function runPriorityChecker(){
 		try {
 			cats = data.query.pages[ data.query.pageids[0] ].categories;
 		} catch (err) {
-			jsMsg('Não foi possível possível determinar a prioridade do artigo na Wikipédia inglesa.', err);
+			mw.notify('Não foi possível possível determinar a prioridade do artigo na Wikipédia inglesa.', err);
 			return false;
 		}
 		if ( !cats ) {
-			jsMsg('Ainda não foi informada a prioridade da versão inglesa deste artigo.');
+			mw.notify('Ainda não foi informada a prioridade da versão inglesa deste artigo.');
 			return false;
 		}
 		$.each(cats, function(id, value){
 			var priority = value.title.match( /Category:(Top|High|Mid|Low)-Priority/ );
 			if ( priority && priority[1] ) {
 				found = true;
-				jsMsg(
+				mw.notify(
 					'Este artigo corresponde a um de prioridade "' +
 					priority[1] +
 					'" na Wikipédia inglesa. Considere indicar na discussão que ele é de importância ' +
@@ -461,7 +460,7 @@ function runPriorityChecker(){
 			}
 		});
 		if ( !found ) {
-			jsMsg('Não foi possível possível determinar a prioridade do artigo na Wikipédia inglesa.');
+			mw.notify('Não foi possível possível determinar a prioridade do artigo na Wikipédia inglesa.');
 			return false;
 		}
 	});
@@ -553,7 +552,7 @@ function processCurrentCat( from ){
 	.done( function( data ) {
 		if ( !data ) {
 			alert( 'Erro: A API não retornou dados.' );
-		} else if ( typeof data.error !== 'undefined' ) {
+		} else if ( data.error !== undefined ) {
 			alert( 'Erro da API: ' + data.error.code + '. ' + data.error.info );
 		} else if ( data.query && data.query.categorymembers ) {
 			// Add to list
@@ -565,7 +564,9 @@ function processCurrentCat( from ){
 				);
 			} else {
 				done++;
-				jsMsg( 'Concluída a análise de ' + done + ' das ' + nRequests + ' categorias (' + (100 * done / nRequests).toFixed(1) + '%)' );
+				mw.notify( 'Concluída a análise de ' + done + ' das ' + nRequests + ' categorias (' + (100 * done / nRequests).toFixed(1) + '%)', {
+					tag: 'category-analysis'
+				} );
 				curC++;
 				if( curC < cats[ types[ curType ] ].length ){
 					processCurrentCat();
@@ -578,7 +579,7 @@ function processCurrentCat( from ){
 						// Now, intersect cats to get the numbers
 						intersectCats( 'quality', 'importance' );
 						// and print the wikicode
-						jsMsg( 'Código wiki:<br><pre>' + mw.html.escape( getTableWikiCode( matrix ) ) + '</pre>' );
+						$('#mw-content-text').prepend( 'Código wiki:<br><pre>' + mw.html.escape( getTableWikiCode( matrix ) ) + '</pre>' );
 					}
 				}
 			}
@@ -723,7 +724,9 @@ function generateBackLinksTable(){
 				table.push( [ page, data.query.backlinks.length ] );
 				done++;
 				mean = mean + ( data.query.backlinks.length - mean)/done;
-				jsMsg( 'Processando a página ' + done + ' de um total de ' + total + '.' );
+				mw.notify( 'Processando a página ' + done + ' de um total de ' + total + '.', {
+					tag: 'page-analysis'
+				} );
 				if ( done === total ){
 					text = 'Os artigos da [[:' + category + ']] têm em média ' + Math.round(mean) + ' afluentes.\n\n';
 					text += getWikitableForData(
@@ -731,7 +734,7 @@ function generateBackLinksTable(){
 						'Número de afluentes das páginas de [[:' + category + '|' + category + ']]',
 						[ '[[:$1]]', '[[Special:Páginas afluentes/$1|$2]]' ]
 					);
-					jsMsg(
+					$('#mw-content-text').prepend(
 						'<b>Código wiki:</b><br/><br/>' +
 						'<textarea cols="80" rows="40" style="width: 100%; font-family: monospace; line-height: 1.5em;">' +
 						mw.html.escape(text) +
@@ -764,7 +767,7 @@ function processCategory( cat, from ){
 			list = [];
 		if ( !data ) {
 			alert( 'Erro: a API não retornou dados.' );
-		} else if ( typeof data.error !== 'undefined' ) {
+		} else if ( data.error !== undefined ) {
 			alert( 'Erro da API: ' + data.error.code + '. ' + data.error.info );
 		} else if ( data.query && data.query.pageids && data.query.pages) {
 			$.each( data.query.pageids, function(pos, id){
@@ -776,7 +779,9 @@ function processCategory( cat, from ){
 			if( cont ){
 				processCategory( cat, cont );
 			} else {
-				jsMsg( 'Concluída a consulta à ' + cat + '.' );
+				mw.notify( 'Concluída a consulta à ' + cat + '.', {
+					tag: 'category-analysis'
+				} );
 				generateBackLinksTable();
 			}
 		} else {
@@ -890,12 +895,14 @@ function addArticleSizeToTable( list, callback ){
 		titles, processSomePages;
 	processSomePages = function( data ){
 		$.each( data.query.pages, function( pos, page ){
-			if( typeof table[ page.title ] === 'undefined' || isList ) {
+			if( table[ page.title ] === undefined || isList ) {
 				table[ page.title ] = {};
 			}
 			table[ page.title ].size = page.revisions[0].size;
 			done++;
-			jsMsg( 'Foi processado o tamanho da página ' + done + ' de um total de ' + total + '.' );
+			mw.notify( 'Foi processado o tamanho da página ' + done + ' de um total de ' + total + '.', {
+				tag: 'page-analysis'
+			} );
 			if ( done === total ){
 				if( $.isFunction( callback ) ){
 					callback( table );
@@ -954,7 +961,7 @@ function getTotalOfBackLinks( title, callback, limit, from, links ){
 		var cont;
 		if ( !data ) {
 			alert( 'Erro: a API não retornou dados.' );
-		} else if ( typeof data.error !== 'undefined' ) {
+		} else if ( data.error !== undefined ) {
 			alert( 'Erro da API: ' + data.error.code + '. ' + data.error.info );
 		} else if ( data.query && data.query.backlinks ) {
 			cont = data[ 'query-continue' ] &&
@@ -964,7 +971,9 @@ function getTotalOfBackLinks( title, callback, limit, from, links ){
 			if( cont && links < limit ){
 				getTotalOfBackLinks( title, callback, limit, cont, links );
 			} else {
-				jsMsg( 'Concluída a contagem de afluentes de ' + title + '.' );
+				mw.notify( 'Concluída a contagem de afluentes de ' + title + '.', {
+					tag: 'page-analysis'
+				} );
 				if( $.isFunction( callback ) ){
 					callback( links );
 				}
@@ -991,8 +1000,10 @@ function addNumberOfBackLinksToTable( list, callback /*, from*/ ){
 			title,
 			function( links ){
 				done++;
-				jsMsg( 'Foram processados os afluentes da página ' + done + ' de um total de ' + total + '.' );
-				if( isList || typeof table[ page ] === 'undefined' ) {
+				mw.notify( 'Foram processados os afluentes da página ' + done + ' de um total de ' + total + '.', {
+					tag: 'page-analysis'
+				} );
+				if( isList || table[ page ] === undefined ) {
 					table[ page ] = {};
 				}
 				table[ page ].links = links;
@@ -1029,7 +1040,7 @@ function getPagesFromCat( cat, callback, from, list ){
 		var cont;
 		if ( !data ) {
 			alert( 'Erro: a API não retornou dados.' );
-		} else if ( typeof data.error !== 'undefined' ) {
+		} else if ( data.error !== undefined ) {
 			alert( 'Erro da API: ' + data.error.code + '. ' + data.error.info );
 		} else if ( data.query && data.query.pageids && data.query.pages) {
 			$.each( data.query.pageids, function(pos, id){
@@ -1041,7 +1052,9 @@ function getPagesFromCat( cat, callback, from, list ){
 			if( cont ){
 				getPagesFromCat( cat, callback, cont, list );
 			} else {
-				jsMsg( 'Concluída a consulta à ' + cat + '.' );
+				mw.notify( 'Concluída a consulta à ' + cat + '.', {
+					tag: 'category-analysis'
+				} );
 				if( $.isFunction( callback ) ){
 					callback( list );
 				}
@@ -1083,7 +1096,7 @@ $(function(){
 		getPagesFromCat(category, function( list ){
 			addNumberOfBackLinksToTable( list, function( table ){
 				addArticleSizeToTable( table, function( table ){
-					jsMsg('Pronto!');
+					mw.notify('Pronto!');
 					plotTableUsingGoogleAPI(table, category);
 				} );
 			});
