@@ -594,8 +594,9 @@ function processCurrentCat( from ){
 
 
 if ( 0 === mw.config.get( 'wgNamespaceNumber' ) &&  mw.config.get( 'wgAction' ) === 'view' ) {
+	mw.loader.load( '//pt.wikibooks.org/w/index.php?title=User:Helder.wiki/Tools/AssessmentHelper.css&action=raw&ctype=text/css&smaxage=21600&maxage=86400', 'text/css' );
 	$(function(){
-		var getText, runQualityChecker, pQuality, pPriority;
+		var getText, runQualityChecker;
 		getText = function ( query ){
 			var	pages = query.query.pages,
 				pageids = query.query.pageids,
@@ -618,26 +619,23 @@ if ( 0 === mw.config.get( 'wgNamespaceNumber' ) &&  mw.config.get( 'wgAction' ) 
 		if ( mw.config.get( 'qcAutoCheck' ) ){
 			runQualityChecker( mw.config.get( 'wgPageName' ) );
 		}
-		pQuality = mw.util.addPortletLink(
+		$(mw.util.addPortletLink(
 			'p-cactions',
 			'#',
 			mw.msg( 'ah-check-quality-link' ),
 			'ca-ah-quality',
 			mw.msg( 'ah-check-quality-desc' )
-		);
-		pPriority = mw.util.addPortletLink(
+		)).click( function( e ) {
+			e.preventDefault();
+			runQualityChecker( mw.config.get( 'wgPageName' ) );
+		});
+		$(mw.util.addPortletLink(
 			'p-cactions',
 			'#',
 			mw.msg( 'ah-check-priority-link' ),
 			'ca-ah-priority',
 			mw.msg( 'ah-check-priority-desc' )
-		);
-		// Bind click handler
-		$(pQuality).click( function( e ) {
-			e.preventDefault();
-			runQualityChecker( mw.config.get( 'wgPageName' ) );
-		});
-		$(pPriority).click( function( e ) {
+		)).click( function( e ) {
 			e.preventDefault();
 			runPriorityChecker( );
 		});
