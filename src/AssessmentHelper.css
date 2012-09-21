@@ -1,0 +1,35 @@
+/* Assessment Helper progress bars */
+#ah-bytes,
+#ah-links,
+#ah-sections,
+#ah-paragraphs,
+#ah-references,
+#ah-images {
+	width: 100px;
+	height: 10px;
+	background-color: #CFC;
+	margin: 1px auto;
+	border: 1px solid gray;
+	position: relative;
+	padding: 0;
+	float: left;
+}
+
+.ah-percent {
+	height: 100%;
+	position: absolute;
+	border-left: 2px solid black;
+}
+.ah-q1, .ah-q2, .ah-q3 {
+	height: 100%;
+	float:left;
+}
+.ah-q1 {
+	background-color: #FAA;
+}
+.ah-q2 {
+	background-color: #FDA;
+}
+.ah-q3 {
+	background-color: #FFA;
+}
