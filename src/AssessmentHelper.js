@@ -140,7 +140,9 @@ function estimateQuality( text ){
 			'references': text.split( /<ref[^\n\/]*?>[\s\S]*?<\/ref>|<ref\s*[\s\S]+?\/>|\{\{(?:[Cc]it(?:ar?|e)|[Rr]ef)/ ).length - 1,
 			'images': text.split( /\[\[(?:Imagem?|File|Ficheiro|Arquivo)/ ).length - 1
 		},
-		reportText, hasRefs, exceedMaxParagraphLength, hasSomeTemplateFromList,
+		$reportText = $('<div id="ah-report">'),
+		$button,
+		hasRefs, exceedMaxParagraphLength, hasSomeTemplateFromList,
 		hasEveryTemplateFromList, requirements, i, q, progressBar,
 		ns = mw.config.get( 'wgNamespaceNumber' ),
 		talkPage = mw.config.get( 'wgFormattedNamespaces' )[ ns - ns%2 + 1 ] +
@@ -328,33 +330,37 @@ mw.log( 'meetReq=', meetReq );
 		}
 	}
 	if ( q === 0 ) {
-		reportText = mw.msg(
+		$reportText.html( mw.msg(
 			'ah-inform-level',
 			quality,
 			mw.util.wikiGetlink( 'Wikipédia:Avaliação automática' )
-		);
+		) );
 	} else {
-		reportText = mw.msg(
+		$reportText.html( mw.msg(
 			'ah-inform-inconsistency',
 			quality,
 			mw.util.wikiGetlink( 'Wikipédia:Avaliação automática' ),
 			q
-		);
+		) );
 	}
 	if ( quality < maxQuality ){
 		// The levels above maxQuality should be evaluated by humans
 		if ( hasSomeTemplateFromList( text, [ 'artigo bom' ] ) ){
-			reportText += '\n' + mw.msg(
-				'ah-inform-good-article-inconsistency',
-				mw.util.wikiGetlink( 'Wikipédia:Avaliação automática' ),
-				quality
-			);
+			$reportText
+				.append('<br>')
+				.append(mw.msg(
+					'ah-inform-good-article-inconsistency',
+					mw.util.wikiGetlink( 'Wikipédia:Avaliação automática' ),
+					quality
+				));
 		} else if ( hasSomeTemplateFromList( text, [ 'artigo destacado'  ] ) ){
-			reportText += '\n' + mw.msg(
-				'ah-inform-featured-article-inconsistency',
-				mw.util.wikiGetlink( 'Wikipédia:Avaliação automática' ),
-				quality
-			);
+			$reportText
+				.append('<br>')
+				.append(mw.msg(
+					'ah-inform-featured-article-inconsistency',
+					mw.util.wikiGetlink( 'Wikipédia:Avaliação automática' ),
+					quality
+				));
 		}
 	}
 	$.each(
@@ -386,27 +392,31 @@ mw.log( 'meetReq=', meetReq );
 		'<span class="ah-q2"></span>' +
 		'<span class="ah-q3"></span>' +
 		'</div>';
-	reportText += '\n' + mw.msg(
-		'ah-report',
-		'<div id="ah-size">' + progressBar, reportInfo.size,
-		'<div id="ah-links">' + progressBar, reportInfo.links,
-		'<div id="ah-sections">' + progressBar, reportInfo.sections,
-		'<div id="ah-paragraphs">' + progressBar, reportInfo.paragraphs,
-		'<div id="ah-references">' + progressBar, reportInfo.references,
-		'<div id="ah-images">' + progressBar, reportInfo.images
-	);
-	reportText += mw.html.element(
-		'a', {
-			id: 'ah-update-link',
-			href: mw.util.wikiGetlink( talkPage ),
-			title: mw.msg( 'ah-ask-for-update-title', quality )
-		}, mw.msg( 'ah-ask-for-update-text', quality )
-	) + '.';
-	$( '#ah-update-link' ).live( 'click', function( e ){
+
+	$button = $( '<input>', {
+		id: 'ah-update-link',
+		type: 'submit',
+		value: mw.msg( 'ah-ask-for-update-text', quality ),
+		title: mw.msg( 'ah-ask-for-update-title', quality )
+	} ).click( function( e ){
 		e.preventDefault();
+		$button.prop('disabled', true);
 		updateQuality( talkPage, quality );
-	});
-	$('#mw-content-text').prepend( reportText );
+	} );
+	
+	$reportText
+		.append('<br>')
+		.append(mw.msg(
+			'ah-report',
+			'<div id="ah-size">' + progressBar, reportInfo.size,
+			'<div id="ah-links">' + progressBar, reportInfo.links,
+			'<div id="ah-sections">' + progressBar, reportInfo.sections,
+			'<div id="ah-paragraphs">' + progressBar, reportInfo.paragraphs,
+			'<div id="ah-references">' + progressBar, reportInfo.references,
+			'<div id="ah-images">' + progressBar, reportInfo.images
+		))
+		.append( $button );
+	$('#mw-content-text').prepend( $reportText );
 	return quality;
 }
 
@@ -984,7 +994,7 @@ function getTotalOfBackLinks( title, callback, limit, from, links ){
 		alert( 'Houve um erro ao usar AJAX para consultar os afluentes da página ' + title + '.' );
 	});
 
-	
+
 }
 
 function addNumberOfBackLinksToTable( list, callback /*, from*/ ){
