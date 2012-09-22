@@ -1,4 +1,10 @@
 /* Assessment Helper progress bars */
+
+#ah-report {
+	border: 1px solid gray;
+	padding: 1em;
+}
+
 #ah-size,
 #ah-bytes,
 #ah-links,
