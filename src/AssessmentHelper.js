@@ -76,7 +76,7 @@ function editPage( page, text, summary ){
 function updateQuality( page, quality ){
 	var processWikiText = function ( text ){
 		// Exemplo: {marca de projeto|?|Matemática|?|WP Offline|?|bot=3/20110904|rev=20110904}
-		var	reMarca = /\{\{[Mm]arca de projeto\|\s*(\?|0?\d)([^\n\}]*?)\s*(\|\s*rev\s*=\s*\d{6}\s*)?\}\}/,
+		var	reMarca = /\{\{\s*[Mm]arca de projeto\s*\|\s*(\?|0?\d)([^\n\}]*?)\s*(\|\s*rev\s*=\s*\d+\s*)?\}\}/,
 			newWikiText;
 		if ( !text ){
 			newWikiText = '{' + '{marca de projeto|' + quality + '}}';
