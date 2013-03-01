@@ -598,56 +598,63 @@ function processCurrentCat( from ){
 	});
 }
 
-
-if ( 0 === mw.config.get( 'wgNamespaceNumber' ) &&  mw.config.get( 'wgAction' ) === 'view' ) {
-	mw.loader.load( '//pt.wikibooks.org/w/index.php?title=User:Helder.wiki/Tools/AssessmentHelper.css&action=raw&ctype=text/css&smaxage=21600&maxage=86400', 'text/css' );
-	$(function(){
-		var getText, runQualityChecker;
-		getText = function ( query ){
-			var	pages = query.query.pages,
-				pageids = query.query.pageids,
-				text;
-			text = pages[ pageids[0] ].revisions[0]['*'];
-			estimateQuality( text );
-		};
-		runQualityChecker = function ( page ) {
-			$.getJSON(
-				mw.util.wikiScript( 'api' ), {
-					'format': 'json',
-					'action': 'query',
-					'titles': page,
-					'prop': 'revisions',
-					'rvprop': 'content',
-					'indexpageids': '1'
-				}, getText
-			);
-		};
-		if ( mw.config.get( 'qcAutoCheck' ) ){
-			runQualityChecker( mw.config.get( 'wgPageName' ) );
-		}
-		$(mw.util.addPortletLink(
-			'p-cactions',
-			'#',
-			mw.msg( 'ah-check-quality-link' ),
-			'ca-ah-quality',
-			mw.msg( 'ah-check-quality-desc' )
-		)).click( function( e ) {
-			e.preventDefault();
-			runQualityChecker( mw.config.get( 'wgPageName' ) );
-		});
-		$(mw.util.addPortletLink(
-			'p-cactions',
-			'#',
-			mw.msg( 'ah-check-priority-link' ),
-			'ca-ah-priority',
-			mw.msg( 'ah-check-priority-desc' )
-		)).click( function( e ) {
-			e.preventDefault();
-			runPriorityChecker( );
-		});
+function addQualityCheckerLink(){
+	var getText, runQualityChecker;
+	getText = function ( query ){
+		var	pages = query.query.pages,
+			pageids = query.query.pageids,
+			text;
+		text = pages[ pageids[0] ].revisions[0]['*'];
+		estimateQuality( text );
+	};
+	runQualityChecker = function ( page ) {
+		$.getJSON(
+			mw.util.wikiScript( 'api' ), {
+				'format': 'json',
+				'action': 'query',
+				'titles': page,
+				'prop': 'revisions',
+				'rvprop': 'content',
+				'indexpageids': '1'
+			}, getText
+		);
+	};
+	if ( mw.config.get( 'qcAutoCheck' ) ){
+		runQualityChecker( mw.config.get( 'wgPageName' ) );
+	}
+	$(mw.util.addPortletLink(
+		'p-cactions',
+		'#',
+		mw.msg( 'ah-check-quality-link' ),
+		'ca-ah-quality',
+		mw.msg( 'ah-check-quality-desc' )
+	)).click( function( e ) {
+		e.preventDefault();
+		runQualityChecker( mw.config.get( 'wgPageName' ) );
 	});
 }
-$(function(){
+function addPriorityCheckerLink(){
+	$(mw.util.addPortletLink(
+		'p-cactions',
+		'#',
+		mw.msg( 'ah-check-priority-link' ),
+		'ca-ah-priority',
+		mw.msg( 'ah-check-priority-desc' )
+	)).click( function( e ) {
+		e.preventDefault();
+		runPriorityChecker( );
+	});
+}
+if ( mw.config.get( 'wgDBname' ).substr(-4) === 'wiki'
+	&& 0 === mw.config.get( 'wgNamespaceNumber' )
+	&&  mw.config.get( 'wgAction' ) === 'view'
+) {
+	mw.loader.load( '//pt.wikibooks.org/w/index.php?title=User:Helder.wiki/Tools/AssessmentHelper.css&action=raw&ctype=text/css&smaxage=21600&maxage=86400', 'text/css' );
+	$( addQualityCheckerLink );
+	$( addPriorityCheckerLink );
+}
+
+function addMatrixUpdaterLink (){
 	var pMatrix = mw.util.addPortletLink(
 		'p-cactions',
 		'#',
@@ -678,7 +685,12 @@ $(function(){
 		});
 		processCurrentCat();
 	});
-});
+}
+if ( mw.config.get( 'wgDBname' ) === 'ptwiki'
+	&&  mw.config.get( 'wgAction' ) === 'view'
+) {
+	$( addMatrixUpdaterLink );
+}
 
 
 
@@ -799,7 +811,7 @@ function processCategory( cat, from ){
 	});
 }
 
-$(function(){
+function addWhatLinksHereTableLink (){
 	$(mw.util.addPortletLink(
 		'p-cactions',
 		'#',
@@ -819,7 +831,12 @@ $(function(){
 		}
 		processCategory( category );
 	});
-});
+}
+if ( mw.config.get( 'wgDBname' ).substr(-4) === 'wiki'
+	&&  mw.config.get( 'wgAction' ) === 'view'
+) {
+	$( addWhatLinksHereTableLink );
+}
 
 }());
 
@@ -1081,7 +1098,7 @@ function getPagesFromCat( cat, callback, from, list ){
 	});
 }
 
-$(function(){
+function addGraphLink (){
 	$(mw.util.addPortletLink(
 		'p-cactions',
 		'#',
@@ -1113,6 +1130,10 @@ $(function(){
 			});
 		});
 	});
-});
+}
+
+if( mw.config.get( 'wgDBname' ).substr(-4) === 'wiki' ) {
+	$( addGraphLink );
+}
 
 }());
