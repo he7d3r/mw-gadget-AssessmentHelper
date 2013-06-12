@@ -728,15 +728,20 @@ function generateBackLinksTable(){
 		var page = pageList[ pos ];
 		$.getJSON(
 			mw.util.wikiScript( 'api' ), {
-				'format': 'json',
-				'action': 'query',
-				'list': 'backlinks',
-				'bltitle': page,
-				'blnamespace': '0|102',
-				'blfilterredir': 'nonredirects',
-				'blredirect': true,
-				'bllimit': 500,
-				'indexpageids': true
+				format: 'json',
+				action: 'query',
+				// list: 'backlinks',
+				// bltitle: page,
+				// blnamespace: '0|102',
+				// blfilterredir: 'nonredirects',
+				// blredirect: true,
+				// bllimit: 500,
+				list: 'embeddedin',
+				eititle: page,
+				einamespace: '0|102',
+				eifilterredir: 'nonredirects',
+				eilimit: 500,
+				indexpageids: true
 			}, function( data ){
 				var text;
 				table.push( [ page, data.query.backlinks.length ] );
@@ -813,7 +818,6 @@ function processCategory( cat, from ){
 
 
 function processPageLinks( page, from ){
-	///w/api.php?action=query&prop=links&format=json&plnamespace=10&pllimit=500&titles=Wikip%C3%A9dia%3AProjetos%2FPadroniza%C3%A7%C3%A3o%2FhiddenStructure
 	var data = {
 		format: 'json',
 		action: 'query',
