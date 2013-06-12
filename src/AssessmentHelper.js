@@ -495,7 +495,7 @@ wikiproject,
 	},
 	types = [ 'quality', 'importance' ],
 	pages, matrix, curC, curType, nRequests, done, pageList = [],
-	category;
+	category = null;
 function getTableWikiCode( t ){
 	var	table = [],
 		line, i, j;
@@ -811,11 +811,62 @@ function processCategory( cat, from ){
 	});
 }
 
+
+function processPageLinks( page, from ){
+	///w/api.php?action=query&prop=links&format=json&plnamespace=10&pllimit=500&titles=Wikip%C3%A9dia%3AProjetos%2FPadroniza%C3%A7%C3%A3o%2FhiddenStructure
+	var data = {
+		format: 'json',
+		action: 'query',
+		prop: 'links',
+		pllimit: 500,
+		titles: page,
+		indexpageids: true
+	};
+	if ( from ){
+		data.plcontinue = from;
+	}
+	$.ajax({
+		url: mw.util.wikiScript( 'api' ),
+		dataType: 'json',
+		data: data
+	})
+	.done( function( data ) {
+		var cont;
+		if ( !data ) {
+			alert( 'Erro: a API não retornou dados.' );
+		} else if ( data.error !== undefined ) {
+			alert( 'Erro da API: ' + data.error.code + '. ' + data.error.info );
+		} else if ( data.query && data.query.pageids && data.query.pages) {
+			pageList = $.map( data.query.pages[ data.query.pageids[0] ].links, function( link ){
+				return link.title;
+			} );
+			cont = data[ 'query-continue' ] &&
+				data[ 'query-continue' ].links &&
+				data[ 'query-continue' ].links.plcontinue;
+			if( cont ){
+				processPageLinks( page, cont );
+			} else {
+				mw.notify( 'Concluída a consulta à lista de links da página "' + page + '".', {
+					tag: 'page-links-analysis'
+				} );
+				generateBackLinksTable();
+			}
+		} else {
+			alert( 'Houve um erro inesperado ao consultar a lista de links da página.' );
+		}
+	})
+	.fail( function() {
+		alert( 'Houve um erro ao usar AJAX para consultar a lista de links da página.' );
+	});
+}
+
+
+
 function addWhatLinksHereTableLink (){
 	$(mw.util.addPortletLink(
 		'p-cactions',
 		'#',
-		'Gerar tabela de afluentes',
+		'Gerar tabela de afluentes (categoria)',
 		'ca-ah-backlinks',
 		'Produz uma tabela com o número de afluentes por artigo da categoria especificada'
 	)).click( function( e ) {
@@ -836,6 +887,24 @@ if ( mw.config.get( 'wgDBname' ).substr(-4) === 'wiki'
 	&&  mw.config.get( 'wgAction' ) === 'view'
 ) {
 	$( addWhatLinksHereTableLink );
+}
+
+function addWhatLinksToEachLinkTableLink (){
+	$(mw.util.addPortletLink(
+		'p-cactions',
+		'#',
+		'Gerar tabela de afluentes (lista)',
+		'ca-ah-backlinks-from-list',
+		'Produz uma tabela com o número de afluentes por página para a qual há um link nesta página'
+	)).click( function( e ) {
+		e.preventDefault();
+		processPageLinks( mw.config.get( 'wgPageName' ) );
+	});
+}
+if ( mw.config.get( 'wgDBname' ).substr(-4) === 'wiki'
+	&&  mw.config.get( 'wgAction' ) === 'view'
+) {
+	$( addWhatLinksToEachLinkTableLink );
 }
 
 }());
