@@ -744,9 +744,9 @@ function generateBackLinksTable(){
 				indexpageids: true
 			}, function( data ){
 				var text;
-				table.push( [ page, data.query.backlinks.length ] );
+				table.push( [ page, data.query.embeddedin.length ] );
 				done++;
-				mean = mean + ( data.query.backlinks.length - mean)/done;
+				mean = mean + ( data.query.embeddedin.length - mean)/done;
 				mw.notify( 'Processando a página ' + done + ' de um total de ' + total + '.', {
 					tag: 'page-analysis'
 				} );
