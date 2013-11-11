@@ -332,13 +332,13 @@ mw.log( 'meetReq=', meetReq );
 		$reportText.html( mw.msg(
 			'ah-inform-level',
 			quality,
-			mw.util.wikiGetlink( 'Wikipédia:Avaliação automática' )
+			mw.util.getUrl( 'Wikipédia:Avaliação automática' )
 		) );
 	} else {
 		$reportText.html( mw.msg(
 			'ah-inform-inconsistency',
 			quality,
-			mw.util.wikiGetlink( 'Wikipédia:Avaliação automática' ),
+			mw.util.getUrl( 'Wikipédia:Avaliação automática' ),
 			q
 		) );
 	}
@@ -349,7 +349,7 @@ mw.log( 'meetReq=', meetReq );
 				.append('<br>')
 				.append(mw.msg(
 					'ah-inform-good-article-inconsistency',
-					mw.util.wikiGetlink( 'Wikipédia:Avaliação automática' ),
+					mw.util.getUrl( 'Wikipédia:Avaliação automática' ),
 					quality
 				));
 		} else if ( hasSomeTemplateFromList( text, [ 'artigo destacado'  ] ) ){
@@ -357,7 +357,7 @@ mw.log( 'meetReq=', meetReq );
 				.append('<br>')
 				.append(mw.msg(
 					'ah-inform-featured-article-inconsistency',
-					mw.util.wikiGetlink( 'Wikipédia:Avaliação automática' ),
+					mw.util.getUrl( 'Wikipédia:Avaliação automática' ),
 					quality
 				));
 		}
