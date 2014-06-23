@@ -20,6 +20,10 @@ mw.messages.set( {
 	'ah-matrix-updater-desc': 'Analisa as categorias de qualidade e importância' +
 		' do wikiprojeto e gera a versão atualizada do código wiki da' +
 		' matriz correspondente',
+	'ah-inform-lua-module': '<div class="error">Atenção! O ' +
+		'<a href="$1">Módulo:Avaliação</a> já <a href="$2">está funcionando</a>. ' +
+		'A partir de agora, só grave a avaliação se ela for diferente da que ' +
+		'aparece por padrão.</div>',
 	'ah-inform-level': 'Estima-se que esta página seja de qualidade $1 conforme' +
 		' os <a href="$2">critérios da Wikipédia</a>.',
 	'ah-inform-inconsistency': 'Estima-se que esta página seja de qualidade $1' +
@@ -29,7 +33,7 @@ mw.messages.set( {
 		' como um artigo destacado.',
 	'ah-inform-good-article-inconsistency': 'Confira se ela foi mesmo eleita' +
 		' como um artigo bom.',
-	'ah-ask-for-update-text': 'Gravar esta avaliação',
+	'ah-ask-for-update-text': 'Gravar esta avaliação mesmo assim',
 	'ah-ask-for-update-title': 'Clique para confirmar que esta página é de' +
 		' qualidade $1 e gravar esta informação na discussão',
 	'ah-quality-update-summary': 'Atualização: esta página cumpre os' +
@@ -414,6 +418,12 @@ mw.log( 'meetReq=', meetReq );
 			'<div id="ah-references">' + progressBar, reportInfo.references,
 			'<div id="ah-images">' + progressBar, reportInfo.images
 		))
+		.append('<br>')
+		.append( mw.msg(
+			'ah-inform-lua-module',
+			mw.util.getUrl( 'Módulo:Avaliação' ),
+			mw.util.getUrl( 'Wikipédia Discussão:Avaliação automática#Implementado!' )
+		) )
 		.append( $button );
 	$('#mw-content-text').prepend( $reportText );
 	return quality;
