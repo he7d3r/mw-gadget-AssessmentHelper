@@ -1185,7 +1185,7 @@ function addGraphLink (){
 		'ca-ah-size-vs-links',
 		'Produz um gráfico que relaciona o número de afluentes e o tamanho dos artigos de um categoria'
 	)).click( function( e ) {
-		var reCat = /^Categor(ia|y):/, //FIXME: Use wgNamespaceIds for other wikis
+		var reCat = /^Categor(ia|y):/, //FIXME: Use mw.config.get('wgNamespaceIds') for other wikis
 		category = prompt(
 			'Informe o nome de uma categoria (usada nos artigos ou nas páginas de discussão):',
 			mw.config.get('wgNamespaceNumber') === 14?
