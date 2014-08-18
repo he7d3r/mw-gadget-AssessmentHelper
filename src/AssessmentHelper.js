@@ -1,6 +1,7 @@
 /**
  * Add some useful links for assessment of Wikipedia articles
- * @author: [[User:Helder.wiki]]
+ * @author: Helder (https://github.com/he7d3r)
+ * @license: CC BY-SA 3.0 <https://creativecommons.org/licenses/by-sa/3.0/>
  * @tracking: [[Special:GlobalUsage/User:Helder.wiki/Tools/AssessmentHelper.js]] ([[File:User:Helder.wiki/Tools/AssessmentHelper.js]])
  */
 /*jslint browser: true, white: true, devel: true, regexp: true, plusplus: true, sloppy: true */
