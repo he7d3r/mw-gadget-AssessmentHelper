@@ -659,7 +659,7 @@ if ( mw.config.get( 'wgDBname' ).substr(-4) === 'wiki'
 	&& 0 === mw.config.get( 'wgNamespaceNumber' )
 	&&  mw.config.get( 'wgAction' ) === 'view'
 ) {
-	mw.loader.load( '//pt.wikibooks.org/w/index.php?title=User:Helder.wiki/Tools/AssessmentHelper.css&action=raw&ctype=text/css', 'text/css' );
+	mw.loader.load( '//meta.wikimedia.org/w/index.php?title=User:He7d3r/Tools/AssessmentHelper.css&action=raw&ctype=text/css', 'text/css' );
 	$( addQualityCheckerLink );
 	$( addPriorityCheckerLink );
 }
