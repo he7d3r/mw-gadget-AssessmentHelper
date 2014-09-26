@@ -3,9 +3,7 @@
  * @author: Helder (https://github.com/he7d3r)
  * @license: CC BY-SA 3.0 <https://creativecommons.org/licenses/by-sa/3.0/>
  */
-/*jslint browser: true, white: true, devel: true, regexp: true, plusplus: true, sloppy: true */
-/*global jQuery, mediaWiki, mw, $, google */
-(function() {
+( function ( mw, $ ) {
 'use strict';
 
 /* Assessment Helper */
@@ -83,11 +81,11 @@ updateQuality = function ( page, quality ){
 		if ( !text ){
 			newWikiText = '{' + '{marca de projeto|' + quality + '}}';
 		} else {
-			/*jslint unparam: true*/
+			/*jshint unused:false */
 			newWikiText = text.replace( reMarca, function( match, oldQuality, projectInfo, rev ){
 				return '{' + '{marca de projeto|' + quality + projectInfo + '|{' + '{subst:rev}}}}';
 			});
-			/*jslint unparam: false*/
+			/*jshint unused:true */
 		}
 		mw.log( text, newWikiText );
 		editPage( page, newWikiText, mw.msg( 'ah-quality-update-summary', quality ) );
@@ -917,7 +915,7 @@ if ( mw.config.get( 'wgDBname' ).substr(-4) === 'wiki'
 	$( addWhatLinksToEachLinkTableLink );
 }
 
-}());
+}( mediaWiki, jQuery ) );
 
 
 
@@ -925,7 +923,7 @@ if ( mw.config.get( 'wgDBname' ).substr(-4) === 'wiki'
 /* Script para plotar gráficos relacionando o número de afluentes e o tamanho dos artigos de certa categoria */
 // FIXME: Fundir as funções que consultam a API com as usadas mais acima...
 
-(function() {
+( function ( mw, $ ) {
 'use strict';
 function plotTableUsingGoogleAPI( table, cat ){
 
@@ -965,7 +963,7 @@ function plotTableUsingGoogleAPI( table, cat ){
 		chart.draw(data, options);
 	};
 
-	/*jslint unparam: true*/
+	/*jshint unused:false */
 	$.getScript('https://www.google.com/jsapi')
 	.done( function(data, textStatus){
 		if('success' !== textStatus){
@@ -977,7 +975,7 @@ function plotTableUsingGoogleAPI( table, cat ){
 			callback: drawChart
 		});
 	});
-	/*jslint unparam: false*/
+	/*jshint unused:true */
 }
 function getLength( obj ){
 	var total;
@@ -1215,4 +1213,4 @@ if( mw.config.get( 'wgDBname' ).substr(-4) === 'wiki' ) {
 	$( addGraphLink );
 }
 
-}());
+}( mediaWiki, jQuery ) );
