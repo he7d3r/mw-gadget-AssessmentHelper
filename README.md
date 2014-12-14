@@ -8,7 +8,7 @@ Installation
 2. Copy the following to the page you have chosen:
 
   ```javascript
-  // [[File:User:He7d3r/Tools/AssessmentHelper.js]] (workaround for [[bugzilla:33355]])
+  // [[File:User:He7d3r/Tools/AssessmentHelper.js]] (workaround for [[phab:T35355]])
   mw.loader.load( '//meta.wikimedia.org/w/index.php?title=User:He7d3r/Tools/AssessmentHelper.js&action=raw&ctype=text/javascript' );
   ```
 
