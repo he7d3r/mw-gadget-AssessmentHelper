@@ -738,7 +738,7 @@
 					'action': 'query',
 					'list': 'backlinks',
 					'bltitle': page,
-					'blnamespace': '0|102',
+					'blnamespace': mw.config.get( 'wgContentNamespaces' ).join( '|' ),
 					'blfilterredir': 'nonredirects',
 					'blredirect': true,
 					'bllimit': 500,
@@ -1038,7 +1038,7 @@
 				'action': 'query',
 				'list': 'backlinks',
 				'bltitle': title,
-				'blnamespace': '0|102',
+				'blnamespace': mw.config.get( 'wgContentNamespaces' ).join( '|' ),
 				'blfilterredir': 'nonredirects',
 				'blredirect': true,
 				'bllimit': limit < 500 ? limit : 500,
@@ -1112,15 +1112,18 @@
 		});
 	}
 	function getPagesFromCat( cat, callback, from, list ) {
-		var data = {
-			'format': 'json',
-			'action': 'query',
-			'generator': 'categorymembers',
-			'gcmnamespace': '0|1|102|103',
-			'gcmtitle': cat,
-			'gcmlimit': '500',
-			'indexpageids': '1'
-		};
+		var nsList = mw.config.get( 'wgContentNamespaces' ).concat( $.map( mw.config.get( 'wgContentNamespaces' ), function( ns ) {
+				return ns + 1;
+			} ) ),
+			data = {
+				'format': 'json',
+				'action': 'query',
+				'generator': 'categorymembers',
+				'gcmnamespace': nsList.join( '|' ),
+				'gcmtitle': cat,
+				'gcmlimit': '500',
+				'indexpageids': '1'
+			};
 		if ( from ) {
 			data.gcmcontinue = from;
 		}
