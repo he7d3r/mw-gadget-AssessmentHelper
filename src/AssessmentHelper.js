@@ -75,7 +75,7 @@
 	},
 	updateQuality = function ( page, quality ) {
 		var processWikiText = function ( text ) {
-			// Exemplo: {marca de projeto|?|Matemática|?|WP Offline|?|bot=3/20110904|rev=20110904}
+			// Example: {marca de projeto|?|Matemática|?|WP Offline|?|bot=3/20110904|rev=20110904}
 			var	reMarca = /\{\{\s*[Mm]arca de projeto\s*\|\s*(\?|0?\d)([^\n\}]*?)\s*(\|\s*rev\s*=\s*\d+\s*)?\}\}/,
 				newWikiText;
 			if ( !text ) {
@@ -323,10 +323,9 @@
 					break;
 				}
 			} else if ( possiblyLevels[q] ) {
-				/* The page level is the greater possibly level,
-				* i.e. the one for which all requirements are met
-				* FIXME: "bom artigo" shouldn't be required for quality 6
-				*/
+				// The page level is the greater possibly level,
+				// i.e. the one for which all requirements are met
+				// FIXME: "bom artigo" shouldn't be required for quality 6
 				quality = q;
 			}
 		}
@@ -910,12 +909,12 @@
 		$( addWhatLinksToEachLinkTableLink );
 	}
 
-	}( mediaWiki, jQuery ) );
+}( mediaWiki, jQuery ) );
 
-	/* Script para plotar gráficos relacionando o número de afluentes e o tamanho dos artigos de certa categoria */
-	// FIXME: Fundir as funções que consultam a API com as usadas mais acima...
+/* Script to plot a graph relating the number of backlinks and the size of the articles in a given category */
+// FIXME: Merge the functions which query the API to the ones used above...
 
-	( function ( mw, $ ) {
+( function ( mw, $ ) {
 	'use strict';
 	function plotTableUsingGoogleAPI( table, cat ) {
 
