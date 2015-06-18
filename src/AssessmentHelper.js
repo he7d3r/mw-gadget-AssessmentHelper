@@ -824,7 +824,8 @@
 			prop: 'links',
 			pllimit: 500,
 			titles: page,
-			indexpageids: true
+			indexpageids: true,
+			rawcontinue: 1
 		};
 		if ( from ) {
 			data.plcontinue = from;
@@ -1033,15 +1034,16 @@
 
 	function getTotalOfBackLinks( title, callback, limit, from, links ) {
 		var	data = {
-				'format': 'json',
-				'action': 'query',
-				'list': 'backlinks',
-				'bltitle': title,
-				'blnamespace': mw.config.get( 'wgContentNamespaces' ).join( '|' ),
-				'blfilterredir': 'nonredirects',
-				'blredirect': true,
-				'bllimit': limit < 500 ? limit : 500,
-				'indexpageids': true
+				format: 'json',
+				action: 'query',
+				list: 'backlinks',
+				bltitle: title,
+				blnamespace: mw.config.get( 'wgContentNamespaces' ).join( '|' ),
+				blfilterredir: 'nonredirects',
+				blredirect: true,
+				bllimit: limit < 500 ? limit : 500,
+				indexpageids: true,
+				rawcontinue: 1
 			};
 		links = links || 0;
 		if ( from ) {
