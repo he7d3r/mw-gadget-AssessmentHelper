@@ -170,13 +170,13 @@
 		};
 		hasSomeTemplateFromList = function ( text, list ) {
 			$.each( list, function ( i, templateName ) {
-				var first = $.escapeRE( templateName.charAt(0) ),
+				var first = mw.RegExp.escape( templateName.charAt(0) ),
 					uFirst = first.toUpperCase(),
 					lFirst = first.toLowerCase();
 				if ( first.length === 1 && uFirst !== lFirst ) {
 					first = '[' + uFirst + lFirst + ']';
 				}
-				list[i] = first + $.escapeRE( templateName.substr(1) );
+				list[i] = first + mw.RegExp.escape( templateName.substr(1) );
 			});
 			var reTemplates = new RegExp( '\\{\\{' + list.join( '|' ) );
 			return reTemplates.test( text );
@@ -657,8 +657,13 @@
 		&& mw.config.get( 'wgAction' ) === 'view'
 	) {
 		mw.loader.load( '//meta.wikimedia.org/w/index.php?title=User:He7d3r/Tools/AssessmentHelper.css&action=raw&ctype=text/css', 'text/css' );
-		$( addQualityCheckerLink );
-		$( addPriorityCheckerLink );
+		$.when(
+			mw.loader.using( 'mediawiki.RegExp' ),
+			$.ready
+		).then( function() {
+			addQualityCheckerLink();
+			addPriorityCheckerLink();
+		} );
 	}
 
 	function addMatrixUpdaterLink() {
