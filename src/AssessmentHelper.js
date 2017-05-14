@@ -976,7 +976,7 @@
 	}
 	function getLength( obj ) {
 		var total;
-		if ( $.isArray( obj ) ) {
+		if ( Array.isArray( obj ) ) {
 			return obj.length;
 		}
 		total = 0;
@@ -987,7 +987,7 @@
 	}
 
 	function addArticleSizeToTable( list, callback ) {
-		var	isList = $.isArray( list ),
+		var	isList = Array.isArray( list ),
 			total = getLength( list ),
 			table = isList ? {} : list,
 			done = 0,
@@ -1090,7 +1090,7 @@
 	}
 
 	function addNumberOfBackLinksToTable( list, callback /*, from*/ ) {
-		var	isList = $.isArray( list ),
+		var	isList = Array.isArray( list ),
 			total = getLength( list ),
 			table = isList ? {} : list,
 			done = 0;
