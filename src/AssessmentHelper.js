@@ -278,7 +278,7 @@
 					meetReq[ req ].push( level );
 					return true;
 				}
-				if ( $.isFunction( value ) ) {
+				if ( typeof value === 'function' ) {
 					value = value( text );
 					requirements[req][level] = value;
 				}
@@ -1005,7 +1005,7 @@
 					tag: 'page-analysis'
 				} );
 				if ( done === total ) {
-					if ( $.isFunction( callback ) ) {
+					if ( typeof callback === 'function' ) {
 						callback( table );
 					}
 				}
@@ -1076,7 +1076,7 @@
 					mw.notify( 'Concluída a contagem de afluentes de ' + title + '.', {
 						tag: 'page-analysis'
 					} );
-					if ( $.isFunction( callback ) ) {
+					if ( typeof callback === 'function' ) {
 						callback( links );
 					}
 				}
@@ -1108,7 +1108,7 @@
 					}
 					table[ page ].links = links;
 					if ( done === total ) {
-						if ( $.isFunction( callback ) ) {
+						if ( typeof callback === 'function' ) {
 							callback( table );
 						}
 					}
@@ -1159,7 +1159,7 @@
 					mw.notify( 'Concluída a consulta à ' + cat + '.', {
 						tag: 'category-analysis'
 					} );
-					if ( $.isFunction( callback ) ) {
+					if ( typeof callback === 'function' ) {
 						callback( list );
 					}
 				}
