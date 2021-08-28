@@ -59,7 +59,7 @@
 				title: page,
 				text: text,
 				summary: summary,
-				token: mw.user.tokens.get( 'editToken' )
+				token: mw.user.tokens.get( 'csrfToken' )
 			}
 		} )
 		.done( function ( data ) {
